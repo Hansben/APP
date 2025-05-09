@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.ims.mapper.ImsInventoryChangesMapper">
+
+    <resultMap type="ImsInventoryChanges" id="ImsInventoryChangesResult">
+        <result property="changeId" column="change_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="changeDate" column="change_date"/>
+        <result property="changeType" column="change_type"/>
+        <result property="quantityChange" column="quantity_change"/>
+        <result property="referenceId" column="reference_id"/>
+        <result property="productName" column="product_name"/>
+    </resultMap>
+
+    <sql id="selectImsInventoryChangesVo">
+        select change_id, s.product_id, t.product_name, change_date, change_type, quantity_change, reference_id
+        from ims_inventory_changes s
+                 left join ims_products t on
+            s.product_id = t.product_id
+    </sql>
+
+    <select id="selectImsInventoryChangesList" parameterType="ImsInventoryChanges"
+            resultMap="ImsInventoryChangesResult">
+        <include refid="selectImsInventoryChangesVo"/>
+        <where>
+            <if test="productId != null ">and s.product_id = #{productId}</if>
+            <if test="changeDate != null ">and change_date = #{changeDate}</if>
+            <if test="changeType != null  and changeType != ''">and change_type = #{changeType}</if>
+            <if test="quantityChange != null ">and quantity_change = #{quantityChange}</if>
+            <if test="referenceId != null ">and reference_id = #{referenceId}</if>
+        </where>
+    </select>
+
+    <select id="selectImsInventoryChangesByChangeId" parameterType="Long" resultMap="ImsInventoryChangesResult">
+        <include refid="selectImsInventoryChangesVo"/>
+        where change_id = #{changeId}
+    </select>
+
+    <insert id="insertImsInventoryChanges" parameterType="ImsInventoryChanges" useGeneratedKeys="true"
+            keyProperty="changeId">
+        insert into ims_inventory_changes
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="productId != null">product_id,</if>
+            <if test="changeDate != null">change_date,</if>
+            <if test="changeType != null and changeType != ''">change_type,</if>
+            <if test="quantityChange != null">quantity_change,</if>
+            <if test="referenceId != null">reference_id,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="productId != null">#{productId},</if>
+            <if test="changeDate != null">#{changeDate},</if>
+            <if test="changeType != null and changeType != ''">#{changeType},</if>
+            <if test="quantityChange != null">#{quantityChange},</if>
+            <if test="referenceId != null">#{referenceId},</if>
+        </trim>
+    </insert>
+
+    <update id="updateImsInventoryChanges" parameterType="ImsInventoryChanges">
+        update ims_inventory_changes
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="productId != null">product_id = #{productId},</if>
+            <if test="changeDate != null">change_date = #{changeDate},</if>
+            <if test="changeType != null and changeType != ''">change_type = #{changeType},</if>
+            <if test="quantityChange != null">quantity_change = #{quantityChange},</if>
+            <if test="referenceId != null">reference_id = #{referenceId},</if>
+        </trim>
+        where change_id = #{changeId}
+    </update>
+
+    <delete id="deleteImsInventoryChangesByChangeId" parameterType="Long">
+        delete
+        from ims_inventory_changes
+        where change_id = #{changeId}
+    </delete>
+
+    <delete id="deleteImsInventoryChangesByChangeIds" parameterType="String">
+        delete from ims_inventory_changes where change_id in
+        <foreach item="changeId" collection="array" open="(" separator="," close=")">
+            #{changeId}
+        </foreach>
+    </delete>
+</mapper>

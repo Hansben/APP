@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.ims.mapper.ImsInventoryMapper">
+
+    <resultMap type="ImsInventory" id="ImsInventoryResult">
+        <result property="inventoryId" column="inventory_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="quantity" column="quantity"/>
+        <result property="lastUpdated" column="last_updated"/>
+        <result property="productName" column="product_name"/>
+    </resultMap>
+
+    <sql id="selectImsInventoryVo">
+        select inventory_id, s.product_id, t.product_name, quantity, last_updated
+        from ims_inventory s
+                 left join ims_products t on
+            s.product_id = t.product_id
+    </sql>
+
+    <select id="selectImsInventoryList" parameterType="ImsInventory" resultMap="ImsInventoryResult">
+        <include refid="selectImsInventoryVo"/>
+        <where>
+            <if test="productId != null ">and s.product_id = #{productId}</if>
+            <if test="quantity != null ">and quantity = #{quantity}</if>
+            <if test="lastUpdated != null ">and last_updated = #{lastUpdated}</if>
+        </where>
+    </select>
+
+    <select id="selectImsInventoryByInventoryId" parameterType="Long" resultMap="ImsInventoryResult">
+        <include refid="selectImsInventoryVo"/>
+        where inventory_id = #{inventoryId}
+    </select>
+    <select id="rk" resultType="com.ruoyi.ims.domain.ViewData">
+        SELECT dr.dt                            AS `date`,
+               COALESCE(SUM(p.quantity), 0)     AS `count`,
+               COALESCE(SUM(p.total_amount), 0) AS amount
+        FROM (
+                 -- 手动生成近7天日期序列
+                 SELECT DATE_ADD(CURDATE(), INTERVAL 0 DAY) AS dt
+                 UNION ALL
+                 SELECT DATE_ADD(CURDATE(), INTERVAL -1 DAY)
+                 UNION ALL
+                 SELECT DATE_ADD(CURDATE(), INTERVAL -2 DAY)
+                 UNION ALL
+                 SELECT DATE_ADD(CURDATE(), INTERVAL -3 DAY)
+                 UNION ALL
+                 SELECT DATE_ADD(CURDATE(), INTERVAL -4 DAY)
+                 UNION ALL
+                 SELECT DATE_ADD(CURDATE(), INTERVAL -5 DAY)
+                 UNION ALL
+                 SELECT DATE_ADD(CURDATE(), INTERVAL -6 DAY)) dr
+                 LEFT JOIN ims_purchases p
+                           ON DATE (p.purchase_date) = dr.dt
+        GROUP BY dr.dt
+        ORDER BY dr.dt ASC;
+
+    </select>
+
+    <select id="ck" resultType="com.ruoyi.ims.domain.ViewData">
+
+        SELECT
+            dr.dt AS `date`,
+            COALESCE(SUM(s.quantity), 0) AS `count`,
+            COALESCE(SUM(s.total_amount), 0) AS amount
+        FROM (
+                 -- 手动生成近7天日期序列
+                 SELECT DATE_ADD(CURDATE(), INTERVAL 0 DAY) AS dt
+                 UNION ALL SELECT DATE_ADD(CURDATE(), INTERVAL -1 DAY)
+                 UNION ALL SELECT DATE_ADD(CURDATE(), INTERVAL -2 DAY)
+                 UNION ALL SELECT DATE_ADD(CURDATE(), INTERVAL -3 DAY)
+                 UNION ALL SELECT DATE_ADD(CURDATE(), INTERVAL -4 DAY)
+                 UNION ALL SELECT DATE_ADD(CURDATE(), INTERVAL -5 DAY)
+                 UNION ALL SELECT DATE_ADD(CURDATE(), INTERVAL -6 DAY)
+             ) dr
+                 LEFT JOIN ims_sales s
+                           ON DATE(s.sale_date) = dr.dt
+        GROUP BY dr.dt
+        ORDER BY dr.dt ASC;
+    </select>
+
+    <insert id="insertImsInventory" parameterType="ImsInventory" useGeneratedKeys="true" keyProperty="inventoryId">
+        insert into ims_inventory
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="productId != null">product_id,</if>
+            <if test="quantity != null">quantity,</if>
+            <if test="lastUpdated != null">last_updated,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="productId != null">#{productId},</if>
+            <if test="quantity != null">#{quantity},</if>
+            <if test="lastUpdated != null">#{lastUpdated},</if>
+        </trim>
+    </insert>
+
+    <update id="updateImsInventory" parameterType="ImsInventory">
+        update ims_inventory
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="productId != null">product_id = #{productId},</if>
+            <if test="quantity != null">quantity = #{quantity},</if>
+            <if test="lastUpdated != null">last_updated = #{lastUpdated},</if>
+        </trim>
+        where inventory_id = #{inventoryId}
+    </update>
+    <update id="stockIn">
+        insert into ims_inventory
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="productId != null">product_id,</if>
+            <if test="quantity != null">quantity,</if>
+            <if test="lastUpdated != null">last_updated,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="productId != null">#{productId},</if>
+            <if test="quantity != null">#{quantity},</if>
+            <if test="lastUpdated != null">#{lastUpdated},</if>
+        </trim>
+        ON DUPLICATE KEY UPDATE quantity = quantity + #{quantity};
+    </update>
+    <update id="stockOut">
+        insert into ims_inventory
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="productId != null">product_id,</if>
+            <if test="quantity != null">quantity,</if>
+            <if test="lastUpdated != null">last_updated,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="productId != null">#{productId},</if>
+            <if test="quantity != null">#{quantity},</if>
+            <if test="lastUpdated != null">#{lastUpdated},</if>
+        </trim>
+        ON DUPLICATE KEY UPDATE quantity = quantity - #{quantity};
+    </update>
+
+    <delete id="deleteImsInventoryByInventoryId" parameterType="Long">
+        delete
+        from ims_inventory
+        where inventory_id = #{inventoryId}
+    </delete>
+
+    <delete id="deleteImsInventoryByInventoryIds" parameterType="String">
+        delete from ims_inventory where inventory_id in
+        <foreach item="inventoryId" collection="array" open="(" separator="," close=")">
+            #{inventoryId}
+        </foreach>
+    </delete>
+</mapper>

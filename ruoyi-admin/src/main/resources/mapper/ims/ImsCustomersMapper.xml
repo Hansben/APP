@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.ims.mapper.ImsCustomersMapper">
+    
+    <resultMap type="ImsCustomers" id="ImsCustomersResult">
+        <result property="customerId"    column="customer_id"    />
+        <result property="customerName"    column="customer_name"    />
+        <result property="contactPerson"    column="contact_person"    />
+        <result property="contactNumber"    column="contact_number"    />
+        <result property="address"    column="address"    />
+    </resultMap>
+
+    <sql id="selectImsCustomersVo">
+        select customer_id, customer_name, contact_person, contact_number, address from ims_customers
+    </sql>
+
+    <select id="selectImsCustomersList" parameterType="ImsCustomers" resultMap="ImsCustomersResult">
+        <include refid="selectImsCustomersVo"/>
+        <where>  
+            <if test="customerName != null  and customerName != ''"> and customer_name like concat('%', #{customerName}, '%')</if>
+            <if test="contactPerson != null  and contactPerson != ''"> and contact_person = #{contactPerson}</if>
+            <if test="contactNumber != null  and contactNumber != ''"> and contact_number = #{contactNumber}</if>
+            <if test="address != null  and address != ''"> and address = #{address}</if>
+        </where>
+    </select>
+    
+    <select id="selectImsCustomersByCustomerId" parameterType="Long" resultMap="ImsCustomersResult">
+        <include refid="selectImsCustomersVo"/>
+        where customer_id = #{customerId}
+    </select>
+
+    <insert id="insertImsCustomers" parameterType="ImsCustomers" useGeneratedKeys="true" keyProperty="customerId">
+        insert into ims_customers
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="customerName != null and customerName != ''">customer_name,</if>
+            <if test="contactPerson != null">contact_person,</if>
+            <if test="contactNumber != null">contact_number,</if>
+            <if test="address != null">address,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="customerName != null and customerName != ''">#{customerName},</if>
+            <if test="contactPerson != null">#{contactPerson},</if>
+            <if test="contactNumber != null">#{contactNumber},</if>
+            <if test="address != null">#{address},</if>
+         </trim>
+    </insert>
+
+    <update id="updateImsCustomers" parameterType="ImsCustomers">
+        update ims_customers
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="customerName != null and customerName != ''">customer_name = #{customerName},</if>
+            <if test="contactPerson != null">contact_person = #{contactPerson},</if>
+            <if test="contactNumber != null">contact_number = #{contactNumber},</if>
+            <if test="address != null">address = #{address},</if>
+        </trim>
+        where customer_id = #{customerId}
+    </update>
+
+    <delete id="deleteImsCustomersByCustomerId" parameterType="Long">
+        delete from ims_customers where customer_id = #{customerId}
+    </delete>
+
+    <delete id="deleteImsCustomersByCustomerIds" parameterType="String">
+        delete from ims_customers where customer_id in 
+        <foreach item="customerId" collection="array" open="(" separator="," close=")">
+            #{customerId}
+        </foreach>
+    </delete>
+</mapper>

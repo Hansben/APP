@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.ims.mapper.ImsProductsMapper">
+    
+    <resultMap type="ImsProducts" id="ImsProductsResult">
+        <result property="productId"    column="product_id"    />
+        <result property="productName"    column="product_name"    />
+        <result property="category"    column="category"    />
+        <result property="unitPrice"    column="unit_price"    />
+        <result property="description"    column="description"    />
+    </resultMap>
+
+    <sql id="selectImsProductsVo">
+        select product_id, product_name, category, unit_price, description from ims_products
+    </sql>
+
+    <select id="selectImsProductsList" parameterType="ImsProducts" resultMap="ImsProductsResult">
+        <include refid="selectImsProductsVo"/>
+        <where>  
+            <if test="productName != null  and productName != ''"> and product_name like concat('%', #{productName}, '%')</if>
+            <if test="category != null  and category != ''"> and category = #{category}</if>
+            <if test="unitPrice != null "> and unit_price = #{unitPrice}</if>
+            <if test="description != null  and description != ''"> and description = #{description}</if>
+        </where>
+    </select>
+    
+    <select id="selectImsProductsByProductId" parameterType="Long" resultMap="ImsProductsResult">
+        <include refid="selectImsProductsVo"/>
+        where product_id = #{productId}
+    </select>
+
+    <insert id="insertImsProducts" parameterType="ImsProducts" useGeneratedKeys="true" keyProperty="productId">
+        insert into ims_products
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="productName != null and productName != ''">product_name,</if>
+            <if test="category != null">category,</if>
+            <if test="unitPrice != null">unit_price,</if>
+            <if test="description != null">description,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="productName != null and productName != ''">#{productName},</if>
+            <if test="category != null">#{category},</if>
+            <if test="unitPrice != null">#{unitPrice},</if>
+            <if test="description != null">#{description},</if>
+         </trim>
+    </insert>
+
+    <update id="updateImsProducts" parameterType="ImsProducts">
+        update ims_products
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="productName != null and productName != ''">product_name = #{productName},</if>
+            <if test="category != null">category = #{category},</if>
+            <if test="unitPrice != null">unit_price = #{unitPrice},</if>
+            <if test="description != null">description = #{description},</if>
+        </trim>
+        where product_id = #{productId}
+    </update>
+
+    <delete id="deleteImsProductsByProductId" parameterType="Long">
+        delete from ims_products where product_id = #{productId}
+    </delete>
+
+    <delete id="deleteImsProductsByProductIds" parameterType="String">
+        delete from ims_products where product_id in 
+        <foreach item="productId" collection="array" open="(" separator="," close=")">
+            #{productId}
+        </foreach>
+    </delete>
+</mapper>

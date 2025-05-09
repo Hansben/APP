@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.ims.mapper.ImsSalesMapper">
+    
+    <resultMap type="ImsSales" id="ImsSalesResult">
+        <result property="saleId"    column="sale_id"    />
+        <result property="productId"    column="product_id"    />
+        <result property="customerId"    column="customer_id"    />
+        <result property="saleDate"    column="sale_date"    />
+        <result property="quantity"    column="quantity"    />
+        <result property="totalAmount"    column="total_amount"    />
+        <result property="productName" column="product_name"/>
+        <result property="customerName" column="customer_name"/>
+
+    </resultMap>
+
+    <sql id="selectImsSalesVo">
+        select sale_id,
+               s.product_id,
+               t1.product_name,
+               s.customer_id,
+               t2.customer_name,
+               sale_date,
+               quantity,
+               total_amount
+        from ims_sales s
+                 left join ims_products t1 on
+            s.product_id = t1.product_id
+                 left join ims_customers t2 on
+            s.customer_id = t2.customer_id
+    </sql>
+
+    <select id="selectImsSalesList" parameterType="ImsSales" resultMap="ImsSalesResult">
+        <include refid="selectImsSalesVo"/>
+        <where>  
+            <if test="productId != null "> and s.product_id = #{productId}</if>
+            <if test="customerId != null "> and s.customer_id = #{customerId}</if>
+            <if test="saleDate != null "> and sale_date = #{saleDate}</if>
+            <if test="quantity != null "> and quantity = #{quantity}</if>
+            <if test="totalAmount != null "> and total_amount = #{totalAmount}</if>
+        </where>
+    </select>
+    
+    <select id="selectImsSalesBySaleId" parameterType="Long" resultMap="ImsSalesResult">
+        <include refid="selectImsSalesVo"/>
+        where sale_id = #{saleId}
+    </select>
+
+    <insert id="insertImsSales" parameterType="ImsSales" useGeneratedKeys="true" keyProperty="saleId">
+        <selectKey keyProperty="saleId" resultType="Long" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        insert into ims_sales
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="productId != null">product_id,</if>
+            <if test="customerId != null">customer_id,</if>
+            <if test="saleDate != null">sale_date,</if>
+            <if test="quantity != null">quantity,</if>
+            <if test="totalAmount != null">total_amount,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="productId != null">#{productId},</if>
+            <if test="customerId != null">#{customerId},</if>
+            <if test="saleDate != null">#{saleDate},</if>
+            <if test="quantity != null">#{quantity},</if>
+            <if test="totalAmount != null">#{totalAmount},</if>
+         </trim>
+    </insert>
+
+    <update id="updateImsSales" parameterType="ImsSales">
+        update ims_sales
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="productId != null">product_id = #{productId},</if>
+            <if test="customerId != null">customer_id = #{customerId},</if>
+            <if test="saleDate != null">sale_date = #{saleDate},</if>
+            <if test="quantity != null">quantity = #{quantity},</if>
+            <if test="totalAmount != null">total_amount = #{totalAmount},</if>
+        </trim>
+        where sale_id = #{saleId}
+    </update>
+
+    <delete id="deleteImsSalesBySaleId" parameterType="Long">
+        delete from ims_sales where sale_id = #{saleId}
+    </delete>
+
+    <delete id="deleteImsSalesBySaleIds" parameterType="String">
+        delete from ims_sales where sale_id in 
+        <foreach item="saleId" collection="array" open="(" separator="," close=")">
+            #{saleId}
+        </foreach>
+    </delete>
+</mapper>

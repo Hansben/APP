@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.ims.mapper.ImsSuppliersMapper">
+    
+    <resultMap type="ImsSuppliers" id="ImsSuppliersResult">
+        <result property="supplierId"    column="supplier_id"    />
+        <result property="supplierName"    column="supplier_name"    />
+        <result property="contactPerson"    column="contact_person"    />
+        <result property="contactNumber"    column="contact_number"    />
+        <result property="address"    column="address"    />
+    </resultMap>
+
+    <sql id="selectImsSuppliersVo">
+        select supplier_id, supplier_name, contact_person, contact_number, address from ims_suppliers
+    </sql>
+
+    <select id="selectImsSuppliersList" parameterType="ImsSuppliers" resultMap="ImsSuppliersResult">
+        <include refid="selectImsSuppliersVo"/>
+        <where>  
+            <if test="supplierName != null  and supplierName != ''"> and supplier_name like concat('%', #{supplierName}, '%')</if>
+            <if test="contactPerson != null  and contactPerson != ''"> and contact_person = #{contactPerson}</if>
+            <if test="contactNumber != null  and contactNumber != ''"> and contact_number = #{contactNumber}</if>
+            <if test="address != null  and address != ''"> and address = #{address}</if>
+        </where>
+    </select>
+    
+    <select id="selectImsSuppliersBySupplierId" parameterType="Long" resultMap="ImsSuppliersResult">
+        <include refid="selectImsSuppliersVo"/>
+        where supplier_id = #{supplierId}
+    </select>
+
+    <insert id="insertImsSuppliers" parameterType="ImsSuppliers" useGeneratedKeys="true" keyProperty="supplierId">
+        insert into ims_suppliers
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="supplierName != null and supplierName != ''">supplier_name,</if>
+            <if test="contactPerson != null">contact_person,</if>
+            <if test="contactNumber != null">contact_number,</if>
+            <if test="address != null">address,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="supplierName != null and supplierName != ''">#{supplierName},</if>
+            <if test="contactPerson != null">#{contactPerson},</if>
+            <if test="contactNumber != null">#{contactNumber},</if>
+            <if test="address != null">#{address},</if>
+         </trim>
+    </insert>
+
+    <update id="updateImsSuppliers" parameterType="ImsSuppliers">
+        update ims_suppliers
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="supplierName != null and supplierName != ''">supplier_name = #{supplierName},</if>
+            <if test="contactPerson != null">contact_person = #{contactPerson},</if>
+            <if test="contactNumber != null">contact_number = #{contactNumber},</if>
+            <if test="address != null">address = #{address},</if>
+        </trim>
+        where supplier_id = #{supplierId}
+    </update>
+
+    <delete id="deleteImsSuppliersBySupplierId" parameterType="Long">
+        delete from ims_suppliers where supplier_id = #{supplierId}
+    </delete>
+
+    <delete id="deleteImsSuppliersBySupplierIds" parameterType="String">
+        delete from ims_suppliers where supplier_id in 
+        <foreach item="supplierId" collection="array" open="(" separator="," close=")">
+            #{supplierId}
+        </foreach>
+    </delete>
+</mapper>

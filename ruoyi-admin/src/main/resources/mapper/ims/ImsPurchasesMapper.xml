@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.ims.mapper.ImsPurchasesMapper">
+
+    <resultMap type="ImsPurchases" id="ImsPurchasesResult">
+        <result property="purchaseId" column="purchase_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="supplierId" column="supplier_id"/>
+        <result property="purchaseDate" column="purchase_date"/>
+        <result property="quantity" column="quantity"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="productName" column="product_name"/>
+        <result property="supplierName" column="supplier_name"/>
+
+    </resultMap>
+
+    <sql id="selectImsPurchasesVo">
+        select purchase_id,
+               s.product_id,
+               t1.product_name,
+               s.supplier_id,
+               t2.supplier_name,
+               purchase_date,
+               quantity,
+               total_amount
+        from ims_purchases s
+                 left join ims_products t1 on
+            s.product_id = t1.product_id
+                 left join ims_suppliers t2 on
+            s.supplier_id = t2.supplier_id
+    </sql>
+
+    <select id="selectImsPurchasesList" parameterType="ImsPurchases" resultMap="ImsPurchasesResult">
+        <include refid="selectImsPurchasesVo"/>
+        <where>
+            <if test="productId != null ">and s.product_id = #{productId}</if>
+            <if test="supplierId != null ">and s.supplier_id = #{supplierId}</if>
+            <if test="purchaseDate != null ">and purchase_date = #{purchaseDate}</if>
+            <if test="quantity != null ">and quantity = #{quantity}</if>
+            <if test="totalAmount != null ">and total_amount = #{totalAmount}</if>
+        </where>
+    </select>
+
+    <select id="selectImsPurchasesByPurchaseId" parameterType="Long" resultMap="ImsPurchasesResult">
+        <include refid="selectImsPurchasesVo"/>
+        where purchase_id = #{purchaseId}
+    </select>
+
+    <insert id="insertImsPurchases" parameterType="ImsPurchases" useGeneratedKeys="true" keyProperty="purchaseId">
+        <selectKey keyProperty="purchaseId" resultType="Long" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        insert into ims_purchases
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="productId != null">product_id,</if>
+            <if test="supplierId != null">supplier_id,</if>
+            <if test="purchaseDate != null">purchase_date,</if>
+            <if test="quantity != null">quantity,</if>
+            <if test="totalAmount != null">total_amount,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="productId != null">#{productId},</if>
+            <if test="supplierId != null">#{supplierId},</if>
+            <if test="purchaseDate != null">#{purchaseDate},</if>
+            <if test="quantity != null">#{quantity},</if>
+            <if test="totalAmount != null">#{totalAmount},</if>
+        </trim>
+    </insert>
+
+    <update id="updateImsPurchases" parameterType="ImsPurchases">
+        update ims_purchases
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="productId != null">product_id = #{productId},</if>
+            <if test="supplierId != null">supplier_id = #{supplierId},</if>
+            <if test="purchaseDate != null">purchase_date = #{purchaseDate},</if>
+            <if test="quantity != null">quantity = #{quantity},</if>
+            <if test="totalAmount != null">total_amount = #{totalAmount},</if>
+        </trim>
+        where purchase_id = #{purchaseId}
+    </update>
+
+    <delete id="deleteImsPurchasesByPurchaseId" parameterType="Long">
+        delete
+        from ims_purchases
+        where purchase_id = #{purchaseId}
+    </delete>
+
+    <delete id="deleteImsPurchasesByPurchaseIds" parameterType="String">
+        delete from ims_purchases where purchase_id in
+        <foreach item="purchaseId" collection="array" open="(" separator="," close=")">
+            #{purchaseId}
+        </foreach>
+    </delete>
+</mapper>

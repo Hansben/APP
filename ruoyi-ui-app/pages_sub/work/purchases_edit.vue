@@ -1,0 +1,152 @@
+<template>
+  <view class="container">
+    <view class="example">
+      <uni-forms ref="form" :model="form" labelWidth="80px">
+        <uni-forms-item label="商品" name="productId" required>
+          <uni-data-picker
+              v-model="form.productId"
+              :localdata="      productOptions.map(option => {
+	return {
+		value:option.value,
+		text:option.label,
+		children:option.children.map(childOption => {
+			return {
+				value:childOption.value,
+				text:childOption.label,
+			}
+		}),
+	}
+})"
+              @change="change"
+          ></uni-data-picker>
+        </uni-forms-item>
+        <uni-forms-item label="供应商" name="supplierId" required>
+          <uni-data-select
+              v-model="form.supplierId"
+              :localdata="supplierOptions.map(option => {
+	return {
+		value:option.value,
+		text:option.label,
+	}
+})"
+              @change="change"
+          ></uni-data-select>
+        </uni-forms-item>
+        <uni-forms-item label="采购日期" name="purchaseDate" required>
+          <uni-datetime-picker type="date" :clear-icon="false" v-model="form.purchaseDate"/>
+        </uni-forms-item>
+        <uni-forms-item label="采购数量" name="quantity">
+          <uni-easyinput v-model="form.quantity" placeholder="请输入采购数量"/>
+        </uni-forms-item>
+        <uni-forms-item label="采购总金额" name="totalAmount">
+          <uni-easyinput v-model="form.totalAmount" placeholder="请输入采购总金额"/>
+        </uni-forms-item>
+      </uni-forms>
+      <button type="primary" @click="submit">提交</button>
+      <button type="primary" v-if="form.purchaseId && form.purchaseId!==''" @click="handleDelete">删除</button>
+    </view>
+  </view>
+</template>
+
+<script>
+import {addPurchases, delPurchases, getPurchases, updatePurchases} from "../../api/ims/purchases.js";
+import UniDataSelect from "../../uni_modules/uni-data-select/components/uni-data-select/uni-data-select.vue";
+import {supplierList} from "../../api/ims/suppliers";
+import {productTypes} from "../../api/ims/products";
+
+export default {
+  components: {UniDataSelect},
+  dicts: ['ims_product_type'],
+  data() {
+    return {
+      productOptions: [],
+      supplierOptions: [],
+      form: {},
+    }
+  },
+  onLoad(option) {
+    if (option.purchaseId && option.purchaseId !== '') {
+      this.form.purchaseId = option.purchaseId
+      this.load(option.purchaseId)
+    }
+    this.getProductTypes();
+    this.getSupplierList();
+  },
+  onReady() {
+  },
+  methods: {
+    getProductTypes() {
+      productTypes().then(response => {
+        this.productOptions = response.data;
+      });
+    },
+    getSupplierList() {
+      supplierList().then(response => {
+        this.supplierOptions = response.data;
+      });
+    },
+    change(e) {
+      console.log("e:", e);
+    },
+    load(purchaseId) {
+      getPurchases(purchaseId).then(response => {
+        this.form = response.data
+      })
+    },
+    submit() {
+      if (this.form.purchaseId && this.form.purchaseId !== '') {
+        updatePurchases(this.form).then(response => {
+          this.$modal.msgSuccess("修改成功")
+          this.$tab.navigateBack()
+        })
+      } else {
+        addPurchases(this.form).then(response => {
+          this.$modal.msgSuccess("新增成功");
+          this.$tab.navigateBack()
+        });
+      }
+    },
+    handleDelete() {
+      delPurchases(this.form.purchaseId).then(response => {
+        this.$modal.msgSuccess("新增成功");
+        this.$tab.navigateBack()
+      });
+    },
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+page {
+  background-color: #ffffff;
+}
+
+.example {
+  padding: 15px;
+  background-color: #fff;
+}
+
+.segmented-control {
+  margin-bottom: 15px;
+}
+
+.button-group {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-around;
+}
+
+.form-item {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  height: 35px;
+  line-height: 35px;
+  margin-left: 10px;
+}
+</style>
